@@ -1,13 +1,73 @@
 import React from 'react'
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Button, Image, Linking } from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Linking, ActivityIndicator, Keyboard, Alert } from "react-native";
+import { fetchNotes } from "../API/IMT";
 
-class LoginScreen extends React.Component {
-    state = {
-        username: "",
-        password: ""
+type MyProps = { navigation: any }
+type MyState = { username: string, password: string, isLoading: boolean }
+
+class LoginScreen extends React.Component<MyProps, MyState> {
+    constructor(props: any) {
+        super(props)
+        this.state = {
+            username: "",
+            password: "",
+            isLoading: false
+        }
+        this._loadNotes = this._loadNotes.bind(this)
+    }
+
+    showError = () => {
+        this.setState({ isLoading: false })
+        Alert.alert("Oups !", "Il y a eu une erreur. Vérifiez votre connexion Internet et vos identifiants.")
+    }
+
+    _displayLoading() {
+        if (this.state.isLoading) {
+            return (
+                <View style={styles.loading_container}>
+                    <ActivityIndicator size='large' color="blue" />
+                </View>
+            )
+        }
+    }
+
+    _logIn = () => {
+        if (!this.state.isLoading && this.state.username && this.state.password) {
+            console.log(this.state)
+            Keyboard.dismiss()
+            this._loadNotes()
+        }
+    }
+
+    _loadNotes() {
+        this.setState({ isLoading: true }, () => {
+            var body = new FormData()
+            body.append("username", this.state.username)
+            body.append("password", this.state.password)
+
+            fetch('https://notes-imt.djemai.net/sifiQuery.php', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                },
+                body: body
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        response.json().then((data) => {
+                            this.setState({ isLoading: false })
+                            this.props.navigation.navigate("NotesScreen", { notes: data })
+                        })
+                    } else {
+                        this.showError()
+                    }
+                })
+                .catch((error) => { console.error(error); this.showError() });
+        })
     }
 
     render() {
+        console.log("render!")
         return (
             <View style={styles.container}>
                 <Image style={styles.logo} source={require("../Images/logo.png")} />
@@ -15,15 +75,24 @@ class LoginScreen extends React.Component {
                     style={styles.inputText}
                     placeholder="Identifiant IMT"
                     textContentType="username"
-                    onChangeText={text => this.setState({ username: text })} />
+                    onChangeText={text => this.setState({ username: text })}
+                    onSubmitEditing={this._logIn} />
                 <TextInput
                     style={styles.inputText}
                     placeholder="Mot de passe IMT"
                     textContentType="password"
                     secureTextEntry
-                    onChangeText={text => this.setState({ password: text })} />
-                <TouchableOpacity style={styles.loginButton}>
-                    <Text style={styles.loginText}>Se connecter</Text>
+                    onChangeText={text => this.setState({ password: text })}
+                    onSubmitEditing={this._logIn}
+                />
+                <TouchableOpacity style={styles.loginButton} onPress={this._logIn}>
+                    {this.state.isLoading
+                        ? <View>
+                            <ActivityIndicator color="white" />
+                            <Text style={styles.loading_text}>Chargement de vos notes...</Text>
+                        </View>
+                        : <Text style={styles.loginText}>Se connecter</Text>
+                    }
                 </TouchableOpacity>
                 <Text style={styles.bottomText}>Vos identifiants seront sauvegardés sur votre appareil pour vous connecter automatiquement au prochain lancement.</Text>
                 <TouchableOpacity onPress={() => Linking.openURL("https://github.com/SamyDjemai/notes-imt-mobile")}>
@@ -37,7 +106,6 @@ class LoginScreen extends React.Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -55,7 +123,7 @@ const styles = StyleSheet.create({
     loginButton: {
         width: "80%",
         alignItems: "center",
-        backgroundColor: "green",
+        backgroundColor: "blue",
         padding: 12,
         borderRadius: 20,
         fontSize: 20,
@@ -76,7 +144,17 @@ const styles = StyleSheet.create({
         color: "blue",
         textAlign: "center",
         marginTop: 10
-    }
+    },
+    loading_container: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+    },
+    loading_text: {
+        color: "white"
+    },
 })
 
 export default LoginScreen

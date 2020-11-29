@@ -1,7 +1,5 @@
-export async function getNotesCSV(username: string, password: string): Promise<any> {
-    const url = 'https://notes-imt.djemai.net/sifiQuery.php'
-
-    return fetch(url, {
+export async function fetchNotes(username: string, password: string): Promise<any> {
+    return fetch('https://notes-imt.djemai.net/sifiQuery.php', {
         method: "POST",
         body: JSON.stringify({
             username: username,
