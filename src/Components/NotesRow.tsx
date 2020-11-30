@@ -38,12 +38,12 @@ const styles = StyleSheet.create({
         alignItems: "flex-end"
     },
     title_container: {
-        flex: 3,
+        flex: 1,
         flexDirection: "column",
         textAlign: "left"
     },
     grade_container: {
-        flex: 1,
+        marginLeft: 16,
         flexDirection: "column",
         alignItems: "flex-end"
     },
