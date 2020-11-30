@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Linking, ActivityIndicator, Keyboard, Alert } from "react-native";
-import { fetchNotes } from "../API/IMT";
+import { notes } from '../Helpers/notesData';
 
 type MyProps = { navigation: any }
 type MyState = { username: string, password: string, isLoading: boolean }
@@ -21,19 +21,8 @@ class LoginScreen extends React.Component<MyProps, MyState> {
         Alert.alert("Oups !", "Il y a eu une erreur. Vérifiez votre connexion Internet et vos identifiants.")
     }
 
-    _displayLoading() {
-        if (this.state.isLoading) {
-            return (
-                <View style={styles.loading_container}>
-                    <ActivityIndicator size='large' color="blue" />
-                </View>
-            )
-        }
-    }
-
     _logIn = () => {
         if (!this.state.isLoading && this.state.username && this.state.password) {
-            console.log(this.state)
             Keyboard.dismiss()
             this._loadNotes()
         }
@@ -45,6 +34,7 @@ class LoginScreen extends React.Component<MyProps, MyState> {
             body.append("username", this.state.username)
             body.append("password", this.state.password)
 
+            /*
             fetch('https://notes-imt.djemai.net/sifiQuery.php', {
                 method: "POST",
                 headers: {
@@ -63,11 +53,14 @@ class LoginScreen extends React.Component<MyProps, MyState> {
                     }
                 })
                 .catch((error) => { console.error(error); this.showError() });
+            */
+
+            this.setState({ isLoading: false })
+            this.props.navigation.navigate("NotesScreen", { notes: notes })
         })
     }
 
     render() {
-        console.log("render!")
         return (
             <View style={styles.container}>
                 <Image style={styles.logo} source={require("../Images/logo.png")} />
@@ -75,8 +68,11 @@ class LoginScreen extends React.Component<MyProps, MyState> {
                     style={styles.inputText}
                     placeholder="Identifiant IMT"
                     textContentType="username"
+                    autoCapitalize="none"
                     onChangeText={text => this.setState({ username: text })}
-                    onSubmitEditing={this._logIn} />
+                    onSubmitEditing={this._logIn}
+                    editable={!this.state.isLoading}
+                />
                 <TextInput
                     style={styles.inputText}
                     placeholder="Mot de passe IMT"
@@ -84,6 +80,7 @@ class LoginScreen extends React.Component<MyProps, MyState> {
                     secureTextEntry
                     onChangeText={text => this.setState({ password: text })}
                     onSubmitEditing={this._logIn}
+                    editable={!this.state.isLoading}
                 />
                 <TouchableOpacity style={styles.loginButton} onPress={this._logIn}>
                     {this.state.isLoading
